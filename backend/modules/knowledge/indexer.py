@@ -138,9 +138,9 @@ def search_qdrant(query: str, top_k: int = TOP_K_RESULTS) -> list[dict]:
     client = get_qdrant_client()
     query_embedding = get_embedding(query)
 
-    results = client.search(
+    results = client.query_points(
         collection_name=QDRANT_COLLECTION,
-        query_vector=query_embedding,
+        query=query_embedding,
         limit=top_k,
         with_payload=True
     )
@@ -152,7 +152,7 @@ def search_qdrant(query: str, top_k: int = TOP_K_RESULTS) -> list[dict]:
             "page_number": r.payload["page_number"],
             "score": r.score
         }
-        for r in results
+        for r in results.points
     ]
 
 

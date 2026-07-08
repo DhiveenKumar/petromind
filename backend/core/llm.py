@@ -6,12 +6,13 @@
 # chat model. Switching providers is one environment variable change.
 #
 # Supported providers:
-#   gemini  → Google Gemini Pro (default, GCP)
+#   gemini  → Google Gemini (default, GCP) — uses Azure OpenAI in dev
 #   openai  → OpenAI GPT-4o
 #   claude  → Anthropic Claude
 #   ollama  → Local Llama (zero cost, offline)
 # =============================================================================
 
+import os
 from backend.core.config import (
     LLM_PROVIDER,
     GEMINI_API_KEY,
@@ -23,22 +24,18 @@ from backend.core.config import (
 def get_llm(temperature: float = 0.0):
     """
     Returns a LangChain-compatible chat model based on LLM_PROVIDER.
-
     temperature=0.0 default — deterministic outputs for
     safety-critical oil & gas recommendations.
-    Callers can override for creative tasks if needed.
-
-    Why LangChain-compatible return type?
-    Every module uses the same .invoke() and .stream() interface
-    regardless of which provider is active underneath.
     This is the adapter pattern applied to AI model selection.
     """
 
     if LLM_PROVIDER == "gemini":
-        from langchain_google_genai import ChatGoogleGenerativeAI
-        return ChatGoogleGenerativeAI(
-            model="gemini-1.5-pro",
-            google_api_key=GEMINI_API_KEY,
+        from langchain_openai import AzureChatOpenAI
+        return AzureChatOpenAI(
+            azure_deployment="gpt-4o",
+            azure_endpoint="https://oilmind-openai.openai.azure.com/",
+            api_key=os.getenv("AZURE_OPENAI_KEY"),
+            api_version="2024-08-01-preview",
             temperature=temperature
         )
 
@@ -75,18 +72,16 @@ def get_llm(temperature: float = 0.0):
 def get_vision_llm():
     """
     Returns vision-capable LLM for the Visual Inspection module.
-    Not all providers support vision — this ensures we always
-    use a model that can process images.
-
-    Currently Gemini and OpenAI support vision.
-    Claude vision support added when stable.
+    GPT-4o supports vision natively across all providers.
     """
 
     if LLM_PROVIDER in ["gemini", "ollama", "claude"]:
-        from langchain_google_genai import ChatGoogleGenerativeAI
-        return ChatGoogleGenerativeAI(
-            model="gemini-1.5-pro-vision",
-            google_api_key=GEMINI_API_KEY,
+        from langchain_openai import AzureChatOpenAI
+        return AzureChatOpenAI(
+            azure_deployment="gpt-4o",
+            azure_endpoint="https://oilmind-openai.openai.azure.com/",
+            api_key=os.getenv("AZURE_OPENAI_KEY"),
+            api_version="2024-08-01-preview",
             temperature=0.0
         )
 
@@ -99,10 +94,12 @@ def get_vision_llm():
         )
 
     else:
-        from langchain_google_genai import ChatGoogleGenerativeAI
-        return ChatGoogleGenerativeAI(
-            model="gemini-1.5-pro-vision",
-            google_api_key=GEMINI_API_KEY,
+        from langchain_openai import AzureChatOpenAI
+        return AzureChatOpenAI(
+            azure_deployment="gpt-4o",
+            azure_endpoint="https://oilmind-openai.openai.azure.com/",
+            api_key=os.getenv("AZURE_OPENAI_KEY"),
+            api_version="2024-08-01-preview",
             temperature=0.0
         )
 
@@ -113,7 +110,7 @@ def get_llm_provider_info() -> dict:
     Used by the /api/health endpoint and admin monitoring page.
     """
     provider_models = {
-        "gemini": "gemini-1.5-pro",
+        "gemini": "gpt-4o (Azure OpenAI)",
         "openai": "gpt-4o",
         "claude": "claude-3-5-sonnet-20241022",
         "ollama": "llama3"
@@ -122,6 +119,6 @@ def get_llm_provider_info() -> dict:
     return {
         "provider": LLM_PROVIDER,
         "model": provider_models.get(LLM_PROVIDER, "unknown"),
-        "vision_capable": LLM_PROVIDER in ["gemini", "openai"],
+        "vision_capable": True,
         "temperature": 0.0
     }
