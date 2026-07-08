@@ -21,6 +21,14 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GCP_PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 
 # =============================================================================
+# AZURE OPENAI — used for embeddings
+# =============================================================================
+AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_OPENAI_KEY = os.getenv("AZURE_OPENAI_KEY")
+AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
+AZURE_EMBEDDING_DEPLOYMENT = os.getenv("AZURE_EMBEDDING_DEPLOYMENT", "text-embedding-3-large")
+
+# =============================================================================
 # OPENAI (alternative)
 # =============================================================================
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
