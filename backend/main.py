@@ -110,7 +110,8 @@ async def health_check():
     try:
         from qdrant_client import QdrantClient
         from backend.core.config import QDRANT_HOST, QDRANT_PORT, QDRANT_COLLECTION
-        client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+        from backend.modules.knowledge.indexer import get_qdrant_client
+        client = get_qdrant_client()
         count = client.count(collection_name=QDRANT_COLLECTION)
         services["qdrant"] = {
             "status": "healthy",

@@ -33,7 +33,14 @@ EMBEDDING_DIMENSIONS = 3072
 
 
 def get_qdrant_client() -> QdrantClient:
-    return QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
+    import os
+    use_https = os.getenv("QDRANT_USE_HTTPS", "false").lower() == "true"
+
+    if use_https:
+        url = f"https://{QDRANT_HOST}"
+        return QdrantClient(url=url, port=None)
+    else:
+        return QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
 
 
 def get_embedding(text: str) -> list[float]:
