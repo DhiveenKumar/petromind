@@ -126,10 +126,10 @@ Provide:
 
     # Extract priority score
     import re
-   score_match = re.search(r'priority.*?(\d+)\s*/\s*10', response.content.lower())
-if not score_match:
-    score_match = re.search(r'(\d+)\s*/\s*10', response.content[:500])
-priority_score = int(score_match.group(1)) if score_match else 8
+    score_match = re.search(r'priority.*?(\d+)\s*/\s*10', response.content.lower())
+    if not score_match:
+        score_match = re.search(r'(\d+)\s*/\s*10', response.content[:500])
+    priority_score = int(score_match.group(1)) if score_match else 8
 
     state["priority_score"] = priority_score
     state["recommended_actions"] = [response.content]
