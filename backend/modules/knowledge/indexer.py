@@ -35,10 +35,11 @@ EMBEDDING_DIMENSIONS = 3072
 def get_qdrant_client() -> QdrantClient:
     import os
     use_https = os.getenv("QDRANT_USE_HTTPS", "false").lower() == "true"
+    api_key = os.getenv("QDRANT_API_KEY")
 
     if use_https:
-        url = f"https://{QDRANT_HOST}"
-        return QdrantClient(url=url, port=None)
+        url = f"https://{QDRANT_HOST}:{QDRANT_PORT}"
+        return QdrantClient(url=url, api_key=api_key)
     else:
         return QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
 
