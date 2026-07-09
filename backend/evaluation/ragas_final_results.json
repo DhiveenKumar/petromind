@@ -1,0 +1,19 @@
+{
+  "project": "PetroMind",
+  "vector_db": "Qdrant",
+  "embedding_model": "text-embedding-3-large (3072-dim)",
+  "test_set_size": 25,
+  "scores": {
+    "faithfulness": 0.846,
+    "answer_relevancy": 0.726,
+    "context_recall": 0.677,
+    "context_precision": null
+  },
+  "comparison_oilmind": {
+    "faithfulness": 0.770,
+    "answer_relevancy": 0.740,
+    "context_precision": 0.570,
+    "context_recall": 0.667
+  },
+  "notes": "Context precision incomplete due to Azure OpenAI rate limiting during parallel LLM-as-judge calls. Faithfulness improved +0.076 over OilMind baseline on identical test set and corpus."
+}

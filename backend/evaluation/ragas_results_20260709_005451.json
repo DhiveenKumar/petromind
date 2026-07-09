@@ -1,0 +1,12 @@
+{
+  "timestamp": "20260709_005451",
+  "vector_db": "Qdrant",
+  "scores": {
+    "faithfulness": 0.846384479717813,
+    "answer_relevancy": 0.7257843121973008,
+    "context_precision": NaN,
+    "context_recall": 0.6766666666666665,
+    "overall_average": NaN
+  },
+  "test_set_size": 25
+}
