@@ -97,5 +97,26 @@
       "quantity": 3,
       "location": "Warehouse B, Bin 7"
     }
+  },
+  {
+    "timestamp": "2026-07-09T20:21:57.053012",
+    "action_type": "maintenance_ticket_created",
+    "details": {
+      "ticket_id": "TKT-20260709202157",
+      "equipment_name": "Pump-17",
+      "priority": 5,
+      "description": "Critical corrosion and localized erosion affecting 20-25% of the surface area. Immediate risk of rupture or leakage under pressure. Urgent inspection and repair required to prevent catastrophic failure.",
+      "status": "OPEN"
+    }
+  },
+  {
+    "timestamp": "2026-07-09T20:21:57.054588",
+    "action_type": "alert_sent",
+    "details": {
+      "equipment_name": "Pump-17",
+      "severity": "CRITICAL",
+      "message": "Critical corrosion and localized erosion detected on Pump-17. Immediate risk of rupture or leakage under pressure. Urgent inspection and repair required to prevent catastrophic failure.",
+      "channel": "#maintenance-alerts"
+    }
   }
 ]

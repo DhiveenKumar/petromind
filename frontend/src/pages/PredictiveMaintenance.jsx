@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TrendingUp, AlertCircle, Loader2, Zap } from "lucide-react";
+import { TrendingUp, AlertCircle, Loader2, Zap, Upload, FileSpreadsheet } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { api } from "../api/client";
 
@@ -7,6 +7,14 @@ export default function PredictiveMaintenance() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [file, setFile] = useState(null);
+  const [equipmentName, setEquipmentName] = useState("Pump-17");
+
+  const riskColor = {
+    HIGH: "#ef4444",
+    MEDIUM: "#f59e0b",
+    LOW: "#10b981"
+  };
 
   const runSample = async () => {
     setLoading(true);
@@ -21,10 +29,29 @@ export default function PredictiveMaintenance() {
     }
   };
 
-  const riskColor = {
-    HIGH: "#ef4444",
-    MEDIUM: "#f59e0b",
-    LOW: "#10b981"
+  const runUpload = async () => {
+    if (!file) {
+      setError("Please select a CSV file first");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await api.analysePrediction(file, equipmentName);
+      setResult(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const f = e.target.files[0];
+    if (f) {
+      setFile(f);
+      setError(null);
+    }
   };
 
   const sensorData = result?.sensor_summary
@@ -48,24 +75,59 @@ export default function PredictiveMaintenance() {
       </div>
 
       {!result && (
-        <div className="bg-[#1a1614] border border-[#332b26] rounded-xl p-10 text-center">
-          <TrendingUp size={32} className="text-[#f59e0b] mx-auto mb-4" />
-          <p className="text-sm text-[#a89a8c] mb-5">
-            Run analysis on sample equipment sensor data — pressure, temperature, vibration
-          </p>
-          <button
-            onClick={runSample}
-            disabled={loading}
-            className="px-6 py-3 bg-gradient-to-r from-[#d97706] to-[#f59e0b] rounded-lg text-[#0a0908] font-semibold text-sm inline-flex items-center gap-2 disabled:opacity-50"
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />}
-            {loading ? "Analysing..." : "Run Sample Analysis"}
-          </button>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-[#1a1614] border border-[#332b26] rounded-xl p-8 text-center">
+            <TrendingUp size={28} className="text-[#f59e0b] mx-auto mb-3" />
+            <div className="text-sm font-semibold text-white mb-1">Try With Sample Data</div>
+            <p className="text-xs text-[#a89a8c] mb-5">
+              Synthetic sensor data with pre-injected anomalies
+            </p>
+            <button
+              onClick={runSample}
+              disabled={loading}
+              className="px-5 py-2.5 bg-gradient-to-r from-[#d97706] to-[#f59e0b] rounded-lg text-[#0a0908] font-semibold text-sm inline-flex items-center gap-2 disabled:opacity-50"
+            >
+              {loading ? <Loader2 size={15} className="animate-spin" /> : <Zap size={15} />}
+              {loading ? "Analysing..." : "Run Sample Analysis"}
+            </button>
+          </div>
+
+          <div className="bg-[#1a1614] border border-[#332b26] rounded-xl p-8 text-center">
+            <Upload size={28} className="text-[#f59e0b] mx-auto mb-3" />
+            <div className="text-sm font-semibold text-white mb-1">Upload Your Own CSV</div>
+            <p className="text-xs text-[#a89a8c] mb-4">
+              Columns: timestamp, pressure_psi, temperature_f, vibration_mm
+            </p>
+
+            <input
+              value={equipmentName}
+              onChange={(e) => setEquipmentName(e.target.value)}
+              placeholder="Equipment name"
+              className="w-full bg-[#0a0908] border border-[#332b26] rounded-lg px-3 py-2 text-sm text-white placeholder-[#a89a8c] focus:outline-none focus:border-[#d97706]/50 mb-3"
+            />
+
+            <label className="flex items-center justify-center gap-2 border border-dashed border-[#332b26] rounded-lg py-2.5 cursor-pointer hover:border-[#d97706]/40 transition-colors mb-3">
+              <FileSpreadsheet size={15} className="text-[#a89a8c]" />
+              <span className="text-xs text-[#a89a8c]">
+                {file ? file.name : "Choose CSV file"}
+              </span>
+              <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
+            </label>
+
+            <button
+              onClick={runUpload}
+              disabled={loading || !file}
+              className="w-full px-5 py-2.5 bg-[#241f1c] border border-[#d97706]/30 rounded-lg text-[#f59e0b] font-semibold text-sm inline-flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {loading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
+              {loading ? "Analysing..." : "Analyse My Data"}
+            </button>
+          </div>
         </div>
       )}
 
       {error && (
-        <div className="bg-[#ef4444]/10 border border-[#ef4444]/30 rounded-xl p-4 text-sm text-[#ef4444] mb-6">
+        <div className="bg-[#ef4444]/10 border border-[#ef4444]/30 rounded-xl p-4 text-sm text-[#ef4444] mt-4">
           {error}
         </div>
       )}
@@ -119,7 +181,7 @@ export default function PredictiveMaintenance() {
           </div>
 
           <button
-            onClick={() => setResult(null)}
+            onClick={() => { setResult(null); setFile(null); }}
             className="text-sm text-[#a89a8c] hover:text-[#e8e3dc]"
           >
             ← Run another analysis
