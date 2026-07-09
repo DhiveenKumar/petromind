@@ -67,5 +67,35 @@
       "quantity": 3,
       "location": "Warehouse B, Bin 7"
     }
+  },
+  {
+    "timestamp": "2026-07-09T03:24:46.909238",
+    "action_type": "maintenance_ticket_created",
+    "details": {
+      "ticket_id": "TKT-20260709032446",
+      "equipment_name": "Pump-17",
+      "priority": 8,
+      "description": "Pump-17 is at a high risk of failure with a 95% probability of bearing failure. Immediate action is required to replace the damaged bearing and prevent catastrophic damage.",
+      "status": "OPEN"
+    }
+  },
+  {
+    "timestamp": "2026-07-09T03:24:46.910346",
+    "action_type": "alert_sent",
+    "details": {
+      "equipment_name": "Pump-17",
+      "severity": "CRITICAL",
+      "message": "Pump-17 is at a high risk of failure with a 95% probability of bearing failure. Immediate action is required to replace the damaged bearing and prevent catastrophic damage.",
+      "channel": "#maintenance-alerts"
+    }
+  },
+  {
+    "timestamp": "2026-07-09T03:24:46.911225",
+    "action_type": "inventory_checked",
+    "details": {
+      "part_name": "bearing",
+      "quantity": 3,
+      "location": "Warehouse B, Bin 7"
+    }
   }
 ]
