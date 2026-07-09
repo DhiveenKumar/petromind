@@ -1,11 +1,12 @@
 # ⚡ PetroMind — Enterprise AI Platform for Oil & Gas
 
-> A five-layer enterprise AI platform combining Agentic RAG, Time Series anomaly detection, and Vision AI — unified by a Decision Intelligence Engine that synthesises findings across all three modalities into prioritised maintenance recommendations.
+> A five-layer enterprise AI platform combining Agentic RAG, Time Series anomaly detection, and Vision AI — unified by a Decision Intelligence Engine that synthesises findings across all three modalities into prioritised, autonomously-executed maintenance actions.
 
 [![Live API](https://img.shields.io/badge/Live%20API-GCP%20Cloud%20Run-blue)](https://petromind-642904158062.us-central1.run.app/docs)
 [![Python](https://img.shields.io/badge/Python-3.12-green)](https://python.org)
 [![GCP](https://img.shields.io/badge/GCP-Cloud%20Run-orange)](https://cloud.google.com/run)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-purple)](https://github.com/langchain-ai/langgraph)
+[![Tool Calling](https://img.shields.io/badge/Agentic-Tool%20Calling-red)](https://github.com/DhiveenKumar/petromind)
 
 ---
 
@@ -13,33 +14,33 @@
 
 Oil and gas maintenance teams rely on three disconnected processes — searching technical documents, reviewing sensor logs, and inspecting equipment photos — each producing separate findings that a supervisor must manually cross-reference to make a decision.
 
-**PetroMind unifies all three** into a single platform where one Decision Intelligence Engine synthesises findings across modalities into one prioritised action plan.
+**PetroMind unifies all three** into a single platform where one Decision Intelligence Engine synthesises findings across modalities into one prioritised action plan — and autonomously executes the resulting actions.
 
 ---
 
 ## 🏗️ Architecture
-
 PetroMind AI Platform
-        Enterprise AI for Oil & Gas Operations
-                     │
-              FastAPI Backend
-                     │
-            LangGraph Orchestrator
-                     │
-
+           Enterprise AI for Oil & Gas Operations
+│
+                FastAPI Backend
+                 │
+LangGraph Orchestrator
+        │
 ────────────────── Data Layer ──────────────────
 Technical Documents · Sensor CSV · Images
-│
+                 │
 ────────────────── AI Layer ────────────────────
 Knowledge AI      Prediction AI      Vision AI
 (Qdrant RAG)     (Anomaly + LLM)   (Vision + LLM)
 │
 ──────────────── Decision Layer ────────────────
 Decision Intelligence Engine
-│
+     │
+──────────────── Action Layer ──────────────────
+Tool-Calling: Tickets · Alerts · Inventory
+              │
 ──────────────── Output Layer ──────────────────
 Executive Maintenance Report
-
 ---
 
 ## 🚀 Tech Stack
@@ -48,7 +49,7 @@ Executive Maintenance Report
 |---|---|---|
 | **LLM** | GPT-4o (pluggable interface) | Generation across all modules |
 | **Vector DB** | Qdrant | Self-hosted semantic search |
-| **Agent** | LangGraph | Multi-node orchestration |
+| **Agent** | LangGraph | Multi-node orchestration + tool calling |
 | **Time Series** | Statistical anomaly detection | Sensor pattern recognition |
 | **Vision** | GPT-4o Vision | Equipment defect detection |
 | **Backend** | FastAPI | REST API, async |
@@ -56,6 +57,7 @@ Executive Maintenance Report
 | **Registry** | GCP Artifact Registry | Image storage |
 | **Hosting** | GCP Cloud Run | Serverless deployment |
 | **Auth** | RBAC | Role-based access control |
+| **Evaluation** | RAGAS | Retrieval quality measurement |
 
 ---
 
@@ -79,13 +81,46 @@ Executive Maintenance Report
 
 ## 🧠 Decision Intelligence Engine
 
-Three-node LangGraph workflow that receives outputs from all three AI modules and:
+Four-node LangGraph workflow that receives outputs from all three AI modules and:
 
 1. **Synthesises** findings across modalities
-2. **Reasons** — identifies corroborating evidence, resolves conflicts
+2. **Reasons** — identifies corroborating evidence, resolves conflicts, assigns priority score
 3. **Reports** — generates executive maintenance report with priority score (1-10)
+4. **Executes** — autonomously calls tools based on findings
 
-Example: Pump-17 test combining all three modules produced a priority score of 8/10 with six ranked actions and citations to API 610, OSHA 1910, and IOGP 434.
+Example: Pump-17 test combining all three modules produced a priority score of 8/10, generated a full executive report, and autonomously executed three tool calls — created a maintenance ticket, sent a critical alert, and checked spare parts inventory.
+
+---
+
+## 🔧 Autonomous Action Execution
+
+The Decision Intelligence Engine doesn't just recommend — it acts. The final node binds three tools to the LLM using LangChain's `bind_tools` interface:
+
+| Tool | Trigger |
+|---|---|
+| `create_maintenance_ticket` | Priority score ≥ 7 |
+| `send_alert` | Severity HIGH/CRITICAL |
+| `check_spare_parts_inventory` | Specific parts mentioned in findings |
+
+The LLM autonomously decides which tools to invoke and with what arguments based on its own reasoning over the report — not hardcoded if-statements. In testing, a report mentioning both seal and bearing issues resulted in the agent independently checking inventory for both parts, without explicit instruction to check either one.
+
+> **Scope note:** Tool implementations are simulated with a persistent audit log rather than connected to a real CMMS or Slack workspace, since this is a portfolio project without enterprise system access. The tool-calling architecture — autonomous LLM decision-making via `bind_tools` — is production-identical; only the tool body (real API call vs. simulated) would change in an enterprise deployment.
+
+Every action is logged to `backend/evaluation/action_log.json` with a timestamp — a full audit trail, which matters in a regulated, safety-critical industry.
+
+---
+
+## 📊 RAGAS Evaluation
+
+Same 25-question test set and source corpus used for direct comparison against [OilMind](https://github.com/DhiveenKumar/oilmind):
+
+| Metric | PetroMind (Qdrant) | OilMind (Azure AI Search) |
+|---|---|---|
+| Faithfulness | **0.846** | 0.770 |
+| Answer Relevancy | 0.726 | 0.740 |
+| Context Precision | 0.597 | 0.570 |
+| Context Recall | 0.677 | 0.667 |
+| **Average** | **0.712** | 0.687 |
 
 ---
 
@@ -117,8 +152,9 @@ petromind/
 │   ├── modules/
 │   │   ├── knowledge/          # RAG — Qdrant + LangGraph
 │   │   ├── prediction/         # Anomaly detection + LLM
-│   │   ├── vision/              # Defect detection + LLM
-│   │   └── report/             # Decision Intelligence Engine
+│   │   ├── vision/             # Defect detection + LLM
+│   │   └── report/             # Decision Intelligence Engine + tools
+│   ├── evaluation/             # RAGAS + action audit log
 │   └── main.py                 # FastAPI entry point
 ├── corpus/raw/                 # Source PDFs
 ├── Dockerfile
@@ -132,6 +168,7 @@ petromind/
 - All secrets via environment variables, never hardcoded
 - RBAC enforced at endpoint level via FastAPI dependency injection
 - No credentials in Docker images
+- Full audit trail for every autonomous action taken
 
 ---
 
