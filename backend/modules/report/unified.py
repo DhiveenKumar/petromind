@@ -7,7 +7,7 @@
 # 2. Resolves conflicting evidence
 # 3. Prioritises actions by risk severity
 # 4. Generates unified executive maintenance report
-# 5. Exports PDF
+# 5. Executes real actions via tool calling
 #
 # This is what separates PetroMind from three separate AI tools.
 # =============================================================================
@@ -21,6 +21,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from backend.core.llm import get_llm
+from backend.modules.report.tools import get_all_tools, get_action_log
 
 
 # =============================================================================
@@ -37,6 +38,7 @@ class DecisionState(TypedDict):
     recommended_actions: list[str]
     executive_report: str
     report_generated: bool
+    actions_taken: list[dict]
 
 
 # =============================================================================
@@ -124,7 +126,6 @@ Provide:
         HumanMessage(content=user_prompt)
     ])
 
-    # Extract priority score
     import re
     score_match = re.search(r'priority.*?(\d+)\s*/\s*10', response.content.lower())
     if not score_match:
@@ -192,6 +193,67 @@ Reasoning Analysis:
     return state
 
 
+def execute_actions_node(state: DecisionState) -> DecisionState:
+    """
+    This is where PetroMind becomes a genuine action-taking agent,
+    not just a recommendation generator.
+
+    The LLM is bound to real tools and decides which to call based
+    on the priority score and findings — it doesn't just describe
+    what should happen, it makes it happen.
+    """
+    llm = get_llm(temperature=0.0)
+    tools = get_all_tools()
+    llm_with_tools = llm.bind_tools(tools)
+
+    system_prompt = """You are PetroMind's action executor. Based on the 
+priority score and findings, decide which tools to call:
+
+- If priority_score >= 7: call create_maintenance_ticket
+- If priority_score >= 8: also call send_alert with severity CRITICAL
+- If priority_score is 5-7: call send_alert with severity HIGH
+- If the report mentions specific parts (seal, bearing, gasket, impeller): 
+  call check_spare_parts_inventory for that part
+
+You may call multiple tools. Only call tools that are clearly justified 
+by the findings — do not call tools unnecessarily."""
+
+    user_prompt = f"""Equipment: {state['equipment_name']}
+Priority Score: {state['priority_score']}/10
+
+Report Summary:
+{state['executive_report'][:1500]}
+
+Decide which actions to take and call the appropriate tools."""
+
+    response = llm_with_tools.invoke([
+        SystemMessage(content=system_prompt),
+        HumanMessage(content=user_prompt)
+    ])
+
+    actions_taken = []
+
+    if response.tool_calls:
+        for tool_call in response.tool_calls:
+            tool_name = tool_call["name"]
+            tool_args = tool_call["args"]
+
+            matching_tool = next(
+                (t for t in tools if t.name == tool_name), None
+            )
+
+            if matching_tool:
+                result = matching_tool.invoke(tool_args)
+                actions_taken.append({
+                    "tool": tool_name,
+                    "args": tool_args,
+                    "result": result
+                })
+
+    state["actions_taken"] = actions_taken
+    return state
+
+
 # =============================================================================
 # BUILD DECISION ENGINE
 # =============================================================================
@@ -199,16 +261,18 @@ Reasoning Analysis:
 def build_decision_engine():
     """
     Builds the LangGraph Decision Intelligence Engine.
-    Three-node graph: synthesise → reason → report → END
+    Four-node graph: synthesise → reason → report → execute_actions → END
     """
     graph = StateGraph(DecisionState)
     graph.add_node("synthesise", synthesise_node)
     graph.add_node("reason", reason_node)
     graph.add_node("report", report_node)
+    graph.add_node("execute_actions", execute_actions_node)
     graph.set_entry_point("synthesise")
     graph.add_edge("synthesise", "reason")
     graph.add_edge("reason", "report")
-    graph.add_edge("report", END)
+    graph.add_edge("report", "execute_actions")
+    graph.add_edge("execute_actions", END)
     return graph.compile()
 
 
@@ -242,7 +306,8 @@ def run_decision_engine(
         priority_score=5,
         recommended_actions=[],
         executive_report="",
-        report_generated=False
+        report_generated=False,
+        actions_taken=[]
     )
 
     result = engine.invoke(initial_state)
@@ -253,6 +318,7 @@ def run_decision_engine(
         "priority_score": result["priority_score"],
         "executive_report": result["executive_report"],
         "synthesised_findings": result["synthesised_findings"],
+        "actions_taken": result["actions_taken"],
         "latency_seconds": latency,
         "modules_used": [
             m for m, r in [
@@ -266,10 +332,9 @@ def run_decision_engine(
 
 
 if __name__ == "__main__":
-    print("Testing Decision Intelligence Engine...")
+    print("Testing Decision Intelligence Engine with Action Execution...")
     print("=" * 60)
 
-    # Simulate outputs from all three AI modules
     mock_knowledge = {
         "answer": "According to API 610 Section 8.3, seal failure "
                   "indicators include increased vibration above 6mm "
@@ -306,4 +371,8 @@ if __name__ == "__main__":
     print(f"\nPriority Score: {result['priority_score']}/10")
     print(f"Modules Used: {result['modules_used']}")
     print(f"Latency: {result['latency_seconds']}s")
+    print(f"\nActions Taken:")
+    for action in result['actions_taken']:
+        print(f"  Tool: {action['tool']}")
+        print(f"  Result: {action['result']}")
     print(f"\nExecutive Report:\n{result['executive_report']}")

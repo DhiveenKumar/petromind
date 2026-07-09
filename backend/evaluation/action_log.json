@@ -1,0 +1,71 @@
+[
+  {
+    "timestamp": "2026-07-09T03:12:40.361097",
+    "action_type": "maintenance_ticket_created",
+    "details": {
+      "ticket_id": "TKT-20260709031240",
+      "equipment_name": "Pump-17",
+      "priority": 8,
+      "description": "Bearing failure imminent",
+      "status": "OPEN"
+    }
+  },
+  {
+    "timestamp": "2026-07-09T03:12:40.361926",
+    "action_type": "alert_sent",
+    "details": {
+      "equipment_name": "Pump-17",
+      "severity": "HIGH",
+      "message": "Critical vibration detected",
+      "channel": "#maintenance-alerts"
+    }
+  },
+  {
+    "timestamp": "2026-07-09T03:12:40.362759",
+    "action_type": "inventory_checked",
+    "details": {
+      "part_name": "bearing",
+      "quantity": 3,
+      "location": "Warehouse B, Bin 7"
+    }
+  },
+  {
+    "timestamp": "2026-07-09T03:23:00.139612",
+    "action_type": "maintenance_ticket_created",
+    "details": {
+      "ticket_id": "TKT-20260709032300",
+      "equipment_name": "Pump-17",
+      "priority": 8,
+      "description": "Pump-17 is exhibiting critical failure indicators, including a 69.23% increase in vibration, 40 detected anomalies, and active corrosion on the outlet flange. Immediate inspection and repairs are required to prevent catastrophic failure and potential operational downtime. Seal and bearing replacement are recommended.",
+      "status": "OPEN"
+    }
+  },
+  {
+    "timestamp": "2026-07-09T03:23:00.140626",
+    "action_type": "alert_sent",
+    "details": {
+      "equipment_name": "Pump-17",
+      "severity": "CRITICAL",
+      "message": "Pump-17 is at imminent risk of failure with a 95% probability within 24-48 hours. Critical issues include increased vibration, seal and bearing degradation, and active corrosion on the outlet flange. Immediate action is required.",
+      "channel": "#maintenance-alerts"
+    }
+  },
+  {
+    "timestamp": "2026-07-09T03:23:00.141400",
+    "action_type": "inventory_checked",
+    "details": {
+      "part_name": "seal",
+      "quantity": 12,
+      "location": "Warehouse A, Bin 14"
+    }
+  },
+  {
+    "timestamp": "2026-07-09T03:23:00.142118",
+    "action_type": "inventory_checked",
+    "details": {
+      "part_name": "bearing",
+      "quantity": 3,
+      "location": "Warehouse B, Bin 7"
+    }
+  }
+]
