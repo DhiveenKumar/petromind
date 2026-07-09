@@ -2,18 +2,22 @@
   "project": "PetroMind",
   "vector_db": "Qdrant",
   "embedding_model": "text-embedding-3-large (3072-dim)",
+  "generation_model": "GPT-4o",
   "test_set_size": 25,
   "scores": {
     "faithfulness": 0.846,
     "answer_relevancy": 0.726,
-    "context_recall": 0.677,
-    "context_precision": null
+    "context_precision": 0.597,
+    "context_recall": 0.677
   },
+  "average": 0.7115,
   "comparison_oilmind": {
+    "vector_db": "Azure AI Search",
     "faithfulness": 0.770,
     "answer_relevancy": 0.740,
     "context_precision": 0.570,
-    "context_recall": 0.667
+    "context_recall": 0.667,
+    "average": 0.687
   },
-  "notes": "Context precision incomplete due to Azure OpenAI rate limiting during parallel LLM-as-judge calls. Faithfulness improved +0.076 over OilMind baseline on identical test set and corpus."
+  "notes": "Same test set (25 questions) and same corpus (3 oil & gas technical documents) used across both projects. PetroMind (Qdrant) shows higher faithfulness (+0.076) and higher context precision (+0.027) than OilMind (Azure AI Search), with comparable answer relevancy and context recall."
 }

@@ -1,0 +1,8 @@
+{
+  "timestamp": "20260709_024926",
+  "vector_db": "Qdrant",
+  "scores": {
+    "context_precision": 0.5966666666242222
+  },
+  "test_set_size": 25
+}
