@@ -16,6 +16,22 @@ def extract_priority_score(text):
         score = int(match.group(1))
         return min(score, 10)
     return None
+import re as _re_priority
+
+def extract_priority_score(text):
+    match = _re_priority.search(r'priority score[^\d]*(\d+)', text, _re_priority.IGNORECASE)
+    if match:
+        score = int(match.group(1))
+        return min(score, 10)
+    return None
+import re as _re_priority
+
+def extract_priority_score(text):
+    match = _re_priority.search(r'priority score[^\d]*(\d+)', text, _re_priority.IGNORECASE)
+    if match:
+        score = int(match.group(1))
+        return min(score, 10)
+    return None
 
 st.set_page_config(page_title="Equipment Vision Agent", page_icon="🔧", layout="wide")
 
@@ -96,7 +112,12 @@ def format_technical_block(text):
             continue
 
         # Numbered top-level section (1. SEVERITY CLASSIFICATION, etc.)
-        section_match = re.match(r'^#{0,4}\s*(\d+)\.\s*\*{0,2}([A-Z\s]+)\*{0,2}\s*$', stripped)
+        # More forgiving match: any number of # symbols, optional bold
+        # markers, and allow the title to contain letters/spaces/slashes
+        section_match = re.match(
+            r'^#*\s*(\d+)\.\s*\*{0,2}([A-Za-z][A-Za-z\s/&-]*?)\*{0,2}\s*$',
+            stripped
+        )
         if section_match:
             num, title = section_match.groups()
             html_parts.append(
@@ -109,6 +130,7 @@ def format_technical_block(text):
 
         is_bullet = stripped.startswith('-') or stripped.startswith('•')
         content = re.sub(r'^[-•]\s*', '', stripped)
+        content = re.sub(r'^#+\s*', '', content)
 
         # Bold sub-label pattern: **Label**: rest of sentence
         label_match = re.match(r'^\*{1,2}([^*]+?)\*{1,2}\s*:?\s*(.*)', content)
@@ -151,8 +173,26 @@ if uploaded_file is not None:
     st.image(uploaded_file, caption="Uploaded image", use_container_width=True)
 
     if st.button("🚀 Run Agent Analysis", use_container_width=True):
+        from PIL import Image
+        import io
+
+        # Automatically resize any uploaded image for faster processing -
+        # large Google Images downloads can be several MB; resizing to
+        # a max width of 800px keeps vision analysis fast without any
+        # manual steps during the demo.
+        uploaded_file.seek(0)
+        img = Image.open(uploaded_file)
+        if img.mode != "RGB":
+            img = img.convert("RGB")
+
+        max_width = 800
+        if img.width > max_width:
+            ratio = max_width / img.width
+            new_size = (max_width, int(img.height * ratio))
+            img = img.resize(new_size)
+
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp:
-            tmp.write(uploaded_file.read())
+            img.save(tmp.name, "JPEG", quality=80)
             tmp_path = tmp.name
 
         name = equipment_name if equipment_name else "Field Equipment Unit"
